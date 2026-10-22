@@ -18,7 +18,9 @@ interface ConjugatorPageProps {
 /**
  * ConjugatorPage - Main page component for the Japanese Verb Conjugator
  */
-function ConjugatorPageContent({ locale: _locale = 'en' }: ConjugatorPageProps) {
+function ConjugatorPageContent({
+  locale: _locale = 'en',
+}: ConjugatorPageProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -87,11 +89,7 @@ function ConjugatorPageContent({ locale: _locale = 'en' }: ConjugatorPageProps) 
   }, [result, pathname]);
 
   return (
-    <div
-      className='mx-auto flex w-full max-w-7xl flex-col px-4 py-8 sm:px-10 sm:py-12'
-      role='main'
-      aria-label='Japanese verb conjugator'
-    >
+    <div className='mx-auto flex w-full max-w-7xl flex-col px-4 py-8 sm:px-10 sm:py-12'>
       <header className='relative mb-8 flex flex-col items-start'>
         <div className='flex flex-col gap-4'>
           <div className='flex items-center gap-2 text-[10px] font-bold tracking-widest text-(--secondary-color)/40 uppercase'>
@@ -181,4 +179,3 @@ export default function ConjugatorPage(props: ConjugatorPageProps) {
     </Suspense>
   );
 }
-

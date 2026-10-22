@@ -82,6 +82,8 @@ try {
       async function screenshot(name) {
         await page.screenshot({
           path: path.join(output, `${width}-${name}.png`),
+          // Avoid mutating an input's style while streamed content hydrates.
+          caret: 'initial',
         });
         check(
           `${width}: ${name} fits viewport`,
@@ -130,7 +132,7 @@ try {
       await page.locator('article[data-testid=blog-post]').waitFor();
       check(
         `${width}: article has one main landmark`,
-        (await page.locator('main').count()) === 1,
+        (await page.getByRole('main').count()) === 1,
       );
       check(
         `${width}: article body is named`,
@@ -154,7 +156,7 @@ try {
       await help.waitFor();
       check(
         `${width}: conjugator has one main landmark`,
-        (await page.locator('main').count()) === 1,
+        (await page.getByRole('main').count()) === 1,
       );
       check(
         `${width}: conjugator explains the Ichidan exception`,
