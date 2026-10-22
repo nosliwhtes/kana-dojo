@@ -1,7 +1,10 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { screen, cleanup } from '@testing-library/react';
+import { renderWithIntl as render } from '@/shared/test/renderWithIntl';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GameBottomBar } from '@/shared/ui-composite/Game/GameBottomBar';
+
+afterEach(cleanup);
 
 describe('GameBottomBar feedback freezing', () => {
   it('keeps last checked feedback while transitioning through check state', () => {
@@ -65,8 +68,14 @@ describe('GameBottomBar feedback freezing', () => {
       />,
     );
 
-    expect(screen.queryByText('Wrong! Correct answer:')).toBeNull();
-    expect(screen.queryByText('answer-a')).toBeNull();
+    // Feedback stays in the DOM for the exit animation, but is hidden from
+    // assistive technology and its report control is removed from tab order.
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(
+      screen
+        .getAllByLabelText('Report an issue with this answer')
+        .every(button => button.tabIndex === -1),
+    ).toBe(true);
 
     rerender(
       <GameBottomBar
@@ -83,4 +92,3 @@ describe('GameBottomBar feedback freezing', () => {
     expect(screen.getByText('answer-a')).toBeTruthy();
   });
 });
-

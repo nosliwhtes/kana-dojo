@@ -138,7 +138,7 @@ function ConjugatorPageContent({ locale: _locale = 'en' }: ConjugatorPageProps) 
       </header>
 
       <div className='relative flex flex-col lg:flex-row lg:items-start lg:gap-12'>
-        <main className='flex flex-1 flex-col gap-8'>
+        <div className='flex flex-1 flex-col gap-8'>
           <section className='w-full'>
             <ConjugatorInput
               value={inputText}
@@ -156,7 +156,7 @@ function ConjugatorPageContent({ locale: _locale = 'en' }: ConjugatorPageProps) 
               onCopyForm={copyForm}
             />
           </section>
-        </main>
+        </div>
 
         <aside
           className='shrink-0 pt-12 lg:sticky lg:top-12 lg:w-[280px] lg:pt-0'

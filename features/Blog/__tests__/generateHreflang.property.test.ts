@@ -1,8 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import * as fc from 'fast-check';
-import { generateHreflang } from '../lib/generateHreflang';
+import {
+  generateHreflang,
+  generateHreflangLinks,
+} from '../lib/generateHreflang';
 import { VALID_LOCALES } from '../types/blog';
 import type { Locale } from '../types/blog';
+
+const { routing } = vi.hoisted(() => ({ routing: { localePrefix: 'always' } }));
+vi.mock('@/core/i18n/routing', () => ({ routing }));
+beforeEach(() => {
+  routing.localePrefix = 'always';
+});
 
 const slugArb = fc
   .array(fc.stringMatching(/^[a-z0-9]+$/), { minLength: 1, maxLength: 5 })
@@ -124,5 +133,22 @@ describe('Property 12: Hreflang Tags for Multi-Locale Posts', () => {
       }),
       { numRuns: 100 },
     );
+  });
+});
+
+// Cookie-selected languages cannot be crawled as separate translated URLs.
+describe('no-prefix routing', () => {
+  it('suppresses duplicate language alternates for every locale subset', () => {
+    routing.localePrefix = 'never';
+    fc.assert(
+      fc.property(slugArb, localesSubsetArb, (slug, locales) => {
+        expect(generateHreflang(slug, locales)).toEqual([]);
+        expect(generateHreflangLinks(slug, locales)).toEqual([]);
+      }),
+      { numRuns: 100 },
+    );
+  });
+  it('does not invent alternates for an empty locale set', () => {
+    expect(generateHreflang('test', [])).toEqual([]);
   });
 });

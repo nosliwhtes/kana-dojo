@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/shared/utils/utils';
 import type { Category, CategoryWithCount } from '../types';
 
@@ -24,16 +25,13 @@ export function CategoryHeader({
   className,
   showLongDescription = true,
 }: CategoryHeaderProps) {
+  const t = useTranslations('resources');
   const count =
     resourceCount ?? ('resourceCount' in category ? category.resourceCount : 0);
 
   return (
     <header
-      className={cn(
-        'mb-12 border-b border-(--border-color) pb-12',
-        className,
-      )}
-      role='banner'
+      className={cn('mb-12 border-b border-(--border-color) pb-12', className)}
     >
       <div className='flex flex-col gap-6 md:flex-row md:items-end md:justify-between'>
         <div className='max-w-2xl'>
@@ -41,15 +39,18 @@ export function CategoryHeader({
             <span className='text-[10px] font-bold tracking-[0.3em] text-(--secondary-color) uppercase opacity-40'>
               Category Collection
             </span>
-            {count > 0 && (
-              <span className='font-mono text-[10px] text-(--secondary-color) opacity-40'>
-                / {count} items
-              </span>
-            )}
+            <span className='font-mono text-xs text-(--secondary-color)'>
+              {t('navigation.resourcesCount', { count })}
+            </span>
           </div>
           <h1 className='text-5xl leading-none font-black tracking-tighter text-(--main-color) md:text-7xl'>
             {category.name}
           </h1>
+          {category.nameJa && (
+            <p lang='ja' className='mt-3 text-lg text-(--secondary-color)'>
+              {category.nameJa}
+            </p>
+          )}
         </div>
       </div>
 
@@ -73,4 +74,3 @@ export function CategoryHeader({
     </header>
   );
 }
-

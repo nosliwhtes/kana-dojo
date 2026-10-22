@@ -4,6 +4,8 @@
  * following WCAG 2.1 accessibility guidelines.
  */
 
+import { parseOklch } from '../data/themes/themeColors';
+
 interface RGB {
   r: number;
   g: number;
@@ -17,11 +19,38 @@ interface HSL {
 }
 
 /**
- * Parse any CSS color format to RGB values (0-255)
- * Supports: hex (#fff, #ffffff), rgb(), rgba(), hsl(), hsla()
+ * Parse supported theme colors to RGB values (0-255).
+ * Supports hex, rgb/rgba, hsl/hsla, and numeric OKLCH theme colors.
+ * Alpha is ignored, as in the existing RGB/HSL paths; use opaque colors.
  */
 export function parseColor(color: string): RGB {
   const trimmed = color.trim().toLowerCase();
+
+  if (trimmed.startsWith('oklch(')) {
+    const parsed = parseOklch(trimmed);
+    if (!parsed) throw new Error(`Invalid OKLCH color: ${color}`);
+    const { L, C, H } = parsed;
+    const a = C * Math.cos((H * Math.PI) / 180);
+    const b = C * Math.sin((H * Math.PI) / 180);
+    // Oklab -> linear sRGB, then the sRGB transfer function.
+    // https://www.w3.org/TR/css-color-4/#color-conversion-code
+    const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+    const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+    const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+    const channel = (linear: number) => {
+      const value =
+        linear <= 0.0031308
+          ? 12.92 * linear
+          : 1.055 * linear ** (1 / 2.4) - 0.055;
+      // This utility reports clipped sRGB estimates, not display-P3 gamut mapping.
+      return Math.round(Math.max(0, Math.min(1, value)) * 255);
+    };
+    return {
+      r: channel(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+      g: channel(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+      b: channel(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s),
+    };
+  }
 
   // Hex format: #fff or #ffffff
   if (trimmed.startsWith('#')) {

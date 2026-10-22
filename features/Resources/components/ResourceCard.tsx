@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/shared/utils/utils';
-import type { Resource, DifficultyLevel, PriceType, Platform } from '../types';
+import type { Resource, Platform } from '../types';
 import {
   Smartphone,
   Globe,
@@ -66,32 +67,6 @@ function Badge({ children, variant = 'default', className }: BadgeProps) {
 }
 
 /**
- * Get display text for difficulty level
- */
-function getDifficultyLabel(difficulty: DifficultyLevel): string {
-  const labels: Record<DifficultyLevel, string> = {
-    beginner: 'Beginner',
-    intermediate: 'Intermediate',
-    advanced: 'Advanced',
-    'all-levels': 'All Levels',
-  };
-  return labels[difficulty];
-}
-
-/**
- * Get display text for price type
- */
-function getPriceLabel(priceType: PriceType): string {
-  const labels: Record<PriceType, string> = {
-    free: 'Free',
-    freemium: 'Freemium',
-    paid: 'Paid',
-    subscription: 'Subs',
-  };
-  return labels[priceType];
-}
-
-/**
  * Platform icon component
  */
 interface PlatformIconProps {
@@ -102,10 +77,7 @@ interface PlatformIconProps {
 function PlatformIcon({ platform, className }: PlatformIconProps) {
   const iconProps = {
     size: 12,
-    className: cn(
-      'shrink-0 text-(--secondary-color) opacity-40',
-      className,
-    ),
+    className: cn('shrink-0 text-(--secondary-color) opacity-40', className),
   };
 
   const icons: Record<Platform, React.ReactNode> = {
@@ -139,6 +111,11 @@ export function ResourceCard({
   isCompact = false,
   onKeyDown,
 }: ResourceCardProps) {
+  const t = useTranslations('resources');
+  const platforms = [...new Set(resource.platforms)];
+  const platformLabel = t('card.availableOn', {
+    platforms: platforms.map(platform => t(`platform.${platform}`)).join(', '),
+  });
   const handleClick = () => {
     onSelect?.(resource);
   };
@@ -158,12 +135,12 @@ export function ResourceCard({
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      aria-label={`${resource.name} - ${resource.description}`}
+      aria-label={`${resource.name} - ${resource.description}. ${platformLabel}`}
       className={cn(
         'group relative flex cursor-pointer flex-col gap-4 px-2 py-8 sm:flex-row sm:items-center',
         'border-b border-(--border-color) transition-all duration-300',
         'hover:bg-(--main-color)/[0.02]',
-        'outline-none focus-visible:bg-(--main-color)/[0.03]',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--main-color)',
         resource.featured && 'bg-(--main-color)/[0.01]',
       )}
     >
@@ -176,10 +153,15 @@ export function ResourceCard({
       <div className='min-w-0 flex-1'>
         <div className='mb-2 flex items-center gap-3'>
           <Badge variant='category'>
-            {formatCategoryName(resource.category)}
+            {t(`categories.${resource.category}`)}
           </Badge>
-          <div className='flex items-center gap-1'>
-            {resource.platforms.slice(0, 3).map(platform => (
+          <div
+            role='img'
+            aria-label={platformLabel}
+            title={platformLabel}
+            className='flex items-center gap-1'
+          >
+            {platforms.slice(0, 3).map(platform => (
               <PlatformIcon key={platform} platform={platform} />
             ))}
           </div>
@@ -210,12 +192,12 @@ export function ResourceCard({
       <div className='flex shrink-0 flex-wrap items-center gap-4 sm:ml-auto sm:flex-nowrap'>
         <div className='flex items-center gap-2'>
           <Badge variant='difficulty'>
-            {getDifficultyLabel(resource.difficulty)}
+            {t(`difficulty.${resource.difficulty}`)}
           </Badge>
-          <Badge variant='price'>{getPriceLabel(resource.priceType)}</Badge>
+          <Badge variant='price'>{t(`priceType.${resource.priceType}`)}</Badge>
         </div>
 
-        <button
+        <span
           className={cn(
             'flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-(--border-color)',
             'text-(--main-color) transition-all duration-300',
@@ -224,36 +206,10 @@ export function ResourceCard({
           aria-hidden='true'
         >
           <ArrowUpRight size={18} />
-        </button>
+        </span>
       </div>
     </article>
   );
 }
 
-/**
- * Format category ID to display name
- */
-function formatCategoryName(categoryId: string): string {
-  const names: Record<string, string> = {
-    apps: 'Apps',
-    websites: 'Web',
-    textbooks: 'Print',
-    youtube: 'Video',
-    podcasts: 'Audio',
-    games: 'Games',
-    jlpt: 'JLPT',
-    reading: 'Read',
-    listening: 'Listen',
-    speaking: 'Speak',
-    writing: 'Write',
-    grammar: 'Grammar',
-    vocabulary: 'Vocab',
-    kanji: 'Kanji',
-    immersion: 'Immersion',
-    community: 'Social',
-  };
-  return names[categoryId] || categoryId;
-}
-
 export default ResourceCard;
-

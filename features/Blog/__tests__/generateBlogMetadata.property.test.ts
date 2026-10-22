@@ -89,7 +89,7 @@ describe('Property 9: Metadata Contains Required Fields', () => {
     fc.assert(
       fc.property(blogPostMetaArb, (post: BlogPostMeta) => {
         const metadata = generateBlogMetadata(post, { baseUrl: BASE_URL });
-        const expectedUrl = `${BASE_URL}/${post.locale}/academy/${post.slug}`;
+        const expectedUrl = `${BASE_URL}/academy/${post.slug}`;
         expect(metadata.alternates?.canonical).toBe(expectedUrl);
       }),
       { numRuns: 100 },
@@ -100,7 +100,7 @@ describe('Property 9: Metadata Contains Required Fields', () => {
     fc.assert(
       fc.property(blogPostMetaArb, (post: BlogPostMeta) => {
         const metadata = generateBlogMetadata(post, { baseUrl: BASE_URL });
-        const expectedUrl = `${BASE_URL}/${post.locale}/academy/${post.slug}`;
+        const expectedUrl = `${BASE_URL}/academy/${post.slug}`;
 
         expect(metadata.openGraph).toBeDefined();
         expect(metadata.openGraph?.title).toBe(post.title);

@@ -19,7 +19,7 @@
     "viewAllCategories": "Ver todas las categorías",
     "relatedCategories": "Categorías Relacionadas",
     "relatedCategoriesDescription": "Explora más recursos de aprendizaje de japonés en estas categorías relacionadas:",
-    "resourcesCount": "{count} recursos"
+    "resourcesCount": "{count} {count, plural, one {recurso} other {recursos}}"
   },
   "filters": {
     "title": "Filtros",

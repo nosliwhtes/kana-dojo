@@ -14,7 +14,7 @@ import {
   getHueDifference,
 } from './colorUtils';
 import { validateTheme, validateAllThemes } from './themeValidator';
-import themeSets from '../data/themes';
+import themeSets from '../data/themes/themes';
 
 describe('Color Parsing', () => {
   it('parses hex colors correctly', () => {
@@ -184,10 +184,10 @@ describe('Theme Audit - All Existing Themes', () => {
     const invalidCount = results.filter(r => !r.isValid).length;
 
     console.log('\n========================================');
-    console.log('WCAG THEME AUDIT RESULTS');
+    console.log('THEME AUDIT RESULTS (WCAG + DESIGN HEURISTICS)');
     console.log('========================================');
     console.log(`Total themes: ${results.length}`);
-    console.log(`WCAG AA Compliant: ${validCount}`);
+    console.log(`Passes all theme checks: ${validCount}`);
     console.log(`Needs Improvement: ${invalidCount}`);
     console.log('========================================\n');
 
@@ -224,8 +224,13 @@ describe('Theme Audit - All Existing Themes', () => {
           );
         });
       }
-      // Don't fail the test - just report
-      expect(true).toBe(true);
+      // Palette contrast is reported without changing existing user themes.
+      // Every current palette must still produce a finite, bounded estimate.
+      const contrast = getContrastRatio(theme.mainColor, theme.backgroundColor);
+      expect(Number.isFinite(contrast)).toBe(true);
+      expect(contrast).toBeGreaterThanOrEqual(1);
+      expect(contrast).toBeLessThanOrEqual(21);
+      expect(result.isValid).toBe(result.issues.length === 0);
     });
   });
 });
