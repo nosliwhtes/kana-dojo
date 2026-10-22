@@ -2,9 +2,14 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { kana } from '@/features/Kana/data/kana';
 import useKanaStore from '@/features/Kana/store/useKanaStore';
-import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
+import { motion, useReducedMotion } from 'framer-motion';
 import clsx from 'clsx';
-import { useClick, useCorrect, useError } from '@/shared/hooks/generic/useAudio';
+import {
+  useClick,
+  useCorrect,
+  useError,
+} from '@/shared/hooks/generic/useAudio';
 // import GameIntel from '@/shared/ui-composite/Game/GameIntel';
 import { useStatsStore } from '@/features/Progress';
 import { useShallow } from 'zustand/react/shallow';
@@ -45,6 +50,9 @@ interface InputGameProps {
 }
 
 const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
+  const t = useTranslations('kana');
+  const reducedMotion = useReducedMotion();
+  const composingRef = useRef(false);
   const logAttempt = useClassicSessionStore(state => state.logAttempt);
   const {
     score,
@@ -141,7 +149,12 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
   const buildTargetPair = useCallback(() => {
     const sourceArray = isReverse ? selectedRomaji : selectedKana;
     if (sourceArray.length === 0) {
-      return { correctChar: '', targetChar: '', promptParts: [], answerParts: [] };
+      return {
+        correctChar: '',
+        targetChar: '',
+        promptParts: [],
+        answerParts: [],
+      };
     }
 
     const used = new Set<string>();
@@ -180,13 +193,17 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
   const answerParts = pairData.answerParts;
   const pauseTimer = useCallback(() => {
     if (answerStartTimeRef.current !== null) {
-      elapsedTimeMsRef.current += performance.now() - answerStartTimeRef.current;
+      elapsedTimeMsRef.current +=
+        performance.now() - answerStartTimeRef.current;
       answerStartTimeRef.current = null;
     }
   }, []);
   const getElapsedTimeMs = useCallback(() => {
     if (answerStartTimeRef.current !== null) {
-      return elapsedTimeMsRef.current + (performance.now() - answerStartTimeRef.current);
+      return (
+        elapsedTimeMsRef.current +
+        (performance.now() - answerStartTimeRef.current)
+      );
     }
     return elapsedTimeMsRef.current;
   }, []);
@@ -204,10 +221,10 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
   const isReady = isReverse ? hasRomaji : hasKana;
 
   useEffect(() => {
-    if (inputRef.current && bottomBarState === 'check') {
+    if (!isHidden && inputRef.current && bottomBarState === 'check') {
       inputRef.current.focus();
     }
-  }, [bottomBarState]);
+  }, [bottomBarState, isHidden]);
 
   useEffect(() => {
     buildTargetPairRef.current = buildTargetPair;
@@ -216,14 +233,32 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
   // Keyboard shortcut for Enter/Space to trigger button
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        isHidden ||
+        event.isComposing ||
+        event.keyCode === 229 ||
+        composingRef.current
+      )
+        return;
+      const target = event.target;
+      if (event.repeat) {
+        if (target === inputRef.current || target === buttonRef.current)
+          event.preventDefault();
+        return;
+      }
+      if (
+        target instanceof HTMLElement &&
+        target !== inputRef.current &&
+        target.closest(
+          'button, a, input, textarea, select, [contenteditable=true], [role=dialog]',
+        )
+      )
+        return;
       const isEnter = event.key === 'Enter';
       const isSpace = event.code === 'Space' || event.key === ' ';
       const isContinueShortcut = isEnter || isSpace;
 
-      if (
-        isContinueShortcut &&
-        shouldSuppressContinueKeyboardShortcut()
-      ) {
+      if (isContinueShortcut && shouldSuppressContinueKeyboardShortcut()) {
         event.preventDefault();
         return;
       }
@@ -250,11 +285,28 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [bottomBarState]);
+  }, [bottomBarState, isHidden]);
 
   useEffect(() => {
-    if (isHidden) pauseTimer();
-  }, [isHidden, pauseTimer]);
+    const syncTimer = () => {
+      if (
+        !isReady ||
+        isHidden ||
+        document.hidden ||
+        bottomBarState === 'correct'
+      ) {
+        pauseTimer();
+      } else if (answerStartTimeRef.current === null) {
+        answerStartTimeRef.current = performance.now();
+      }
+    };
+    syncTimer();
+    document.addEventListener('visibilitychange', syncTimer);
+    return () => {
+      pauseTimer();
+      document.removeEventListener('visibilitychange', syncTimer);
+    };
+  }, [isReady, isHidden, bottomBarState, pauseTimer]);
 
   useEffect(() => {
     if (isReady) {
@@ -270,6 +322,13 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
   }, [isReady]);
 
   const handleCheck = () => {
+    if (
+      isHidden ||
+      composingRef.current ||
+      bottomBarState === 'correct' ||
+      justAnsweredRef.current
+    )
+      return;
     const trimmedInput = inputValue.trim();
     if (trimmedInput.length === 0) return;
 
@@ -300,7 +359,8 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
     recordAnswerTime(answerTimeMs);
     resetTimer();
     playCorrect();
-    promptParts.forEach(char => {
+    const kanaParts = isReverse ? answerParts : promptParts;
+    kanaParts.forEach(char => {
       addCharacterToHistory(char);
       incrementCharacterScore(char, 'correct');
     });
@@ -310,6 +370,8 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
     triggerCrazyMode();
     promptParts.forEach(char => {
       adaptiveSelector.updateCharacterWeight(char, true);
+    });
+    kanaParts.forEach(char => {
       if (isHiragana(char)) incrementHiraganaCorrect();
       else if (isKatakana(char)) incrementKatakanaCorrect();
     });
@@ -339,7 +401,7 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
     setWrongFeedbackSignal(prev => prev + 1);
     playErrorTwice();
 
-    promptParts.forEach(char => {
+    (isReverse ? answerParts : promptParts).forEach(char => {
       incrementCharacterScore(char, 'wrong');
     });
     incrementWrongAnswers();
@@ -374,12 +436,13 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
   };
 
   const handleContinue = useCallback(() => {
+    if (isHidden || justAnsweredRef.current) return;
     playClick();
     setInputValue('');
     generateNewCharacter();
     setBottomBarState('check');
     startTimer();
-  }, [playClick, generateNewCharacter, startTimer]);
+  }, [isHidden, playClick, generateNewCharacter, startTimer]);
 
   const _gameMode = isReverse ? 'reverse input' : 'input';
   const canCheck = inputValue.trim().length > 0 && bottomBarState !== 'correct';
@@ -405,13 +468,14 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
       {/* <GameIntel gameMode={gameMode} /> */}
       <div
         className={cn(
-          'flex flex-row items-center gap-1',
+          'flex max-w-full flex-row items-center gap-1',
           isGlassMode && 'rounded-xl bg-(--card-color) px-4 py-2',
         )}
       >
         <motion.p
-          className='text-7xl font-medium sm:text-8xl'
-          initial={{ opacity: 0, x: 30, scale: 0.95 }}
+          className='max-w-full text-center text-6xl leading-snug font-medium wrap-anywhere sm:text-8xl'
+          lang={isReverse ? 'en' : 'ja'}
+          initial={reducedMotion ? false : { opacity: 0, x: 30, scale: 0.95 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
           transition={{
             type: 'spring',
@@ -425,10 +489,34 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
           {correctChar}
         </motion.p>
       </div>
+      <p
+        id='kana-answer-hint'
+        className='text-center text-sm text-(--secondary-color)'
+      >
+        {t(
+          isReverse
+            ? 'modes.description.reverseInput'
+            : 'modes.description.input',
+        )}
+      </p>
       <textarea
         ref={inputRef}
         value={inputValue}
-        placeholder='type your answer...'
+        aria-label={t('game.answerLabel')}
+        aria-describedby='kana-answer-hint'
+        placeholder={t('game.answerPlaceholder')}
+        autoCapitalize='none'
+        autoCorrect='off'
+        autoComplete='off'
+        spellCheck={false}
+        enterKeyHint='done'
+        lang={isReverse ? 'ja' : 'en'}
+        onCompositionStart={() => {
+          composingRef.current = true;
+        }}
+        onCompositionEnd={() => {
+          composingRef.current = false;
+        }}
         disabled={showContinue}
         rows={4}
         className={clsx(
@@ -436,18 +524,24 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
           'rounded-3xl px-5 py-4',
           'border-4 border-(--border-color) bg-(--card-color)',
           'text-top text-left text-lg font-medium lg:text-xl',
-          'text-(--secondary-color) placeholder:text-base placeholder:font-normal placeholder:text-(--secondary-color)/40',
+          'text-(--secondary-color) placeholder:text-base placeholder:font-normal placeholder:text-(--secondary-color)',
           'game-input resize-none focus:border-(--secondary-color)/70 focus:text-(--main-color) focus:outline-none',
           'transition-colors duration-200 ease-out',
           showContinue && 'cursor-not-allowed opacity-60',
         )}
-        autoFocus
         onChange={e => {
           setInputValue(e.target.value);
           clearWrongFeedback();
         }}
         onFocus={clearWrongFeedback}
         onKeyDown={e => {
+          if (
+            e.nativeEvent.isComposing ||
+            e.nativeEvent.keyCode === 229 ||
+            composingRef.current ||
+            e.repeat
+          )
+            return;
           if (e.key === 'Enter') {
             e.preventDefault();
             if (inputValue.trim().length > 0 && bottomBarState !== 'correct') {
@@ -476,4 +570,3 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
 };
 
 export default InputGame;
-

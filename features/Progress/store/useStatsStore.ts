@@ -110,7 +110,6 @@ interface IStatsState {
   showStats: boolean;
   toggleStats: () => void;
 
-
   // Timing
   correctAnswerTimes: number[];
   addCorrectAnswerTime: (time: number) => void;
@@ -233,22 +232,49 @@ const createTimedWrongIncrement = (
 };
 
 const DEBOUNCE_MS = 2000;
-let debounceTimerId: ReturnType<typeof setTimeout> | null = null;
-
 function createDebouncedStorage<S>(): ReturnType<typeof createJSONStorage<S>> {
   const baseStorage = createJSONStorage<S>(() => localStorage);
   if (!baseStorage) return baseStorage;
 
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let pending: { name: string; value: { state: S; version?: number } } | null =
+    null;
+  const cancelTimer = () => {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+  };
+  const flush = () => {
+    cancelTimer();
+    if (!pending) return;
+    try {
+      baseStorage.setItem(pending.name, pending.value);
+      pending = null;
+    } catch (error) {
+      // Keep the in-memory progress and retry on the next lifecycle event/write.
+      console.warn('Unable to persist training statistics', error);
+    }
+  };
+  if (typeof window !== 'undefined') {
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flush();
+    });
+  }
+
   return {
     getItem: baseStorage.getItem,
-    setItem: (name: string, value: { state: S; version?: number }) => {
-      if (debounceTimerId) clearTimeout(debounceTimerId);
-      debounceTimerId = setTimeout(() => {
-        baseStorage!.setItem(name, value);
-        debounceTimerId = null;
-      }, DEBOUNCE_MS);
+    setItem: (name, value) => {
+      cancelTimer();
+      pending = { name, value };
+      timer = setTimeout(flush, DEBOUNCE_MS);
     },
-    removeItem: baseStorage.removeItem,
+    removeItem: name => {
+      if (pending?.name === name) {
+        cancelTimer();
+        pending = null;
+      }
+      return baseStorage.removeItem(name);
+    },
   };
 }
 
@@ -277,7 +303,6 @@ const useStatsStore = create<IStatsState>()(
       // UI state
       showStats: false,
       toggleStats: () => set(s => ({ showStats: !s.showStats })),
-
 
       // Timing
       correctAnswerTimes: [],
@@ -323,7 +348,9 @@ const useStatsStore = create<IStatsState>()(
           mastery[character] = {
             ...mastery[character],
             [field === 'correct' ? 'correct' : 'incorrect']:
-              mastery[character][field === 'correct' ? 'correct' : 'incorrect'] + 1,
+              mastery[character][
+                field === 'correct' ? 'correct' : 'incorrect'
+              ] + 1,
           };
 
           return {
@@ -488,8 +515,7 @@ const useStatsStore = create<IStatsState>()(
               ...s.allTimeStats,
               totalSessions: s.allTimeStats.totalSessions + 1,
               totalCorrect: s.allTimeStats.totalCorrect + s.numCorrectAnswers,
-              totalIncorrect:
-                s.allTimeStats.totalIncorrect + s.numWrongAnswers,
+              totalIncorrect: s.allTimeStats.totalIncorrect + s.numWrongAnswers,
               bestStreak: Math.max(s.allTimeStats.bestStreak, s.currentStreak),
               trainingDays,
             },
@@ -685,7 +711,8 @@ const useStatsStore = create<IStatsState>()(
         }),
 
       // Time and speed tracking actions (Requirements 6.1-6.5)
-      recordAnswerTime: (timeMs: number) =>
+      recordAnswerTime: (timeMs: number) => {
+        if (!Number.isFinite(timeMs) || timeMs <= 0) return;
         set(s => ({
           allTimeStats: {
             ...s.allTimeStats,
@@ -695,7 +722,8 @@ const useStatsStore = create<IStatsState>()(
               MAX_ANSWER_TIMES,
             ),
           },
-        })),
+        }));
+      },
 
       // Variety and exploration tracking actions (Requirements 8.1-8.3)
       recordDojoUsed: (dojo: string) =>
@@ -795,6 +823,13 @@ const useStatsStore = create<IStatsState>()(
           allTimeStats: {
             ...defaultAllTimeStats,
             ...(persisted?.allTimeStats || {}),
+            // JSON serializes Infinity (the no-sample sentinel) as null.
+            fastestAnswerMs:
+              typeof persisted?.allTimeStats?.fastestAnswerMs === 'number' &&
+              Number.isFinite(persisted.allTimeStats.fastestAnswerMs) &&
+              persisted.allTimeStats.fastestAnswerMs > 0
+                ? persisted.allTimeStats.fastestAnswerMs
+                : Infinity,
             // Ensure nested objects/arrays are properly merged with defaults
             gauntletStats: {
               ...defaultGauntletStats,
