@@ -1,5 +1,7 @@
 # KanaDojo quality follow-up and final delivery
 
+> Subsequent explicit build verification also passed. See the [production build addendum](production-build-verification.md). The build-related limits below describe this original delivery checkpoint.
+
 Completed 2026-10-22 in the isolated `kana-dojo` checkout on branch `fix/learning-flow-integrity`.
 
 - Original repository HEAD: `44652062507dd36a9d563e88ebaf78676d137d4c`.
