@@ -1,5 +1,7 @@
 # Learning flow and progress integrity audit
 
+> Historical first-stage checkpoint. The subsequent [quality follow-up](quality-followup.md) resolves the failures listed below and records the final green full-suite result. Statements here about unchanged original tests/configuration apply only to this first stage.
+
 Completed 2026-10-22 against `nosliwhtes/kana-dojo` in an isolated clone.
 
 - Branch: `fix/learning-flow-integrity`
