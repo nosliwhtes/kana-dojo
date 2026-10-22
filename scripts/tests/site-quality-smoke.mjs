@@ -149,6 +149,13 @@ try {
       await screenshot('academy');
 
       await visit('/conjugate');
+      // The input focuses from its mount effect; wait for client hydration before
+      // counting landmarks or scrolling so delayed focus cannot undo the scroll.
+      await page.waitForFunction(
+        () =>
+          document.activeElement ===
+          document.querySelector('input[aria-labelledby="verb-input-label"]'),
+      );
       const help = page.getByRole('region', {
         name: 'Understanding Japanese Verb Conjugation',
         exact: true,
