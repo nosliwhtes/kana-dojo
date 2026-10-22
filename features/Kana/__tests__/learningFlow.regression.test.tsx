@@ -135,6 +135,17 @@ describe('Kana typing learning flow', () => {
     ).toBe(true);
   });
 
+  it('preserves held editing keys while entering an answer', () => {
+    showGame();
+    const input = screen.getByRole('textbox');
+    for (const key of ['Backspace', 'ArrowLeft', 'a', ' ']) {
+      expect(fireEvent.keyDown(input, { key, repeat: true })).toBe(true);
+    }
+    expect(fireEvent.keyDown(input, { key: 'Enter', repeat: true })).toBe(
+      false,
+    );
+  });
+
   it('keeps feedback on rapid action clicks and suppresses held-key activation', () => {
     showGame();
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'a' } });

@@ -242,8 +242,16 @@ const InputGame = ({ isHidden, isReverse = false }: InputGameProps) => {
         return;
       const target = event.target;
       if (event.repeat) {
-        if (target === inputRef.current || target === buttonRef.current)
+        const isActivationKey =
+          event.key === 'Enter' ||
+          (target === buttonRef.current &&
+            (event.key === ' ' || event.code === 'Space'));
+        if (
+          isActivationKey &&
+          (target === inputRef.current || target === buttonRef.current)
+        ) {
           event.preventDefault();
+        }
         return;
       }
       if (

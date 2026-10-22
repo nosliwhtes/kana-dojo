@@ -133,6 +133,14 @@ try {
       receipt.views.push({ key, geometry, prompt });
 
       await input.fill('xyz');
+      await page.keyboard.down('Backspace');
+      await page.keyboard.down('Backspace');
+      await page.keyboard.up('Backspace');
+      check(
+        `${key}: held Backspace edits normally`,
+        (await input.inputValue()) === 'x',
+      );
+      await input.fill('xyz');
       await input.press('Enter');
       await page.getByRole('status').filter({ hasText: 'Wrong!' }).waitFor();
       check(`${key}: wrong answer permits retry`, await input.isEnabled());
