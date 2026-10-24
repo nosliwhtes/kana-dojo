@@ -151,7 +151,7 @@ describe('Property 10: Article Schema Contains Required Fields', () => {
     fc.assert(
       fc.property(blogPostArb, (post: BlogPost) => {
         const schema = generateArticleSchema(post, { baseUrl: BASE_URL });
-        const expectedUrl = `${BASE_URL}/${post.locale}/academy/${post.slug}`;
+        const expectedUrl = `${BASE_URL}/academy/${post.slug}`;
         expect(schema.mainEntityOfPage).toBe(expectedUrl);
       }),
       { numRuns: 100 },

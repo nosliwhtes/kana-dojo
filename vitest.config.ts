@@ -35,6 +35,11 @@ try {
 export default defineConfig({
   test: {
     environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
+    // next-intl imports Next's extensionless entrypoints for bundler support.
+    // Process them through Vite rather than Node's native ESM resolver.
+    // https://next-intl.dev/docs/environments/testing
+    server: { deps: { inline: ['next-intl'] } },
     globals: true,
     include: ['**/*.test.ts', '**/*.test.tsx'],
     ...(storybookTest && playwright

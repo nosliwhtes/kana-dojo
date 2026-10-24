@@ -10,7 +10,8 @@
 import React from 'react';
 import { describe, it, expect, afterEach } from 'vitest';
 import * as fc from 'fast-check';
-import { render, cleanup } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
+import { renderWithIntl as render } from '@/shared/test/renderWithIntl';
 import { CategoryHeader } from '../components/CategoryHeader';
 import { CATEGORY_IDS, type Category, type CategoryId } from '../types';
 
@@ -36,7 +37,7 @@ const categoryArb: fc.Arbitrary<Category> = fc.record({
   name: uniqueStringArb,
   nameJa: uniqueStringArb,
   description: uniqueStringArb,
-  descriptionLong: uniqueStringArb,
+  descriptionLong: uniqueStringArb.map(value => `long-${value}`),
   icon: fc.constantFrom('book', 'app', 'video', 'headphones', 'gamepad'),
   subcategories: fc.constant([]),
   order: fc.integer({ min: 1, max: 20 }),
@@ -163,6 +164,11 @@ describe('Property 15: Category Content Presence', () => {
         const html = container.innerHTML;
 
         // Long description should NOT be present
+        expect(
+          container.querySelector(
+            '[aria-label="Detailed category description"]',
+          ),
+        ).toBeNull();
         expect(html).not.toContain(category.descriptionLong);
 
         // Clean up

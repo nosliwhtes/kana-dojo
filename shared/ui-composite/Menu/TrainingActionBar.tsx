@@ -334,6 +334,7 @@ const TrainingActionBar: React.FC<ITopBarProps> = ({
                     <button
                       key={id}
                       ref={ref}
+                      aria-label={label}
                       disabled={id === 'classic' && !isFilled}
                       className={cn(
                         'flex flex-row items-center justify-center gap-2 py-3',
@@ -365,9 +366,9 @@ const TrainingActionBar: React.FC<ITopBarProps> = ({
                           iconClassName,
                         )}
                       />
-                      {/* <span className='whitespace-nowrap text-lg font-medium sm:text-xl'>
+                      <span className='whitespace-nowrap text-lg font-medium sm:text-xl'>
                         {label}
-                      </span> */}
+                      </span>
                     </button>
                   ),
                 )}

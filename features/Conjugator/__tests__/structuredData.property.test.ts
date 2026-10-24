@@ -377,15 +377,18 @@ describe('Structured Data Completeness Properties', () => {
       expect(breadcrumb['itemListElement']).toBeDefined();
     });
 
-    it('has at least 3 items without verb', () => {
+    it('has exactly Home and Conjugator without a verb', () => {
       const breadcrumb = generateBreadcrumbSchema();
       const items = breadcrumb['itemListElement'] as Record<string, unknown>[];
 
       expect(Array.isArray(items)).toBe(true);
-      expect(items.length).toBeGreaterThanOrEqual(3);
+      expect(items).toHaveLength(2);
+      expect(
+        items.map(item => (item.item as Record<string, string>)['@id']),
+      ).toEqual(['https://kanadojo.com', 'https://kanadojo.com/conjugate']);
     });
 
-    it('has 4 items with verb', () => {
+    it('has 3 items with verb', () => {
       fc.assert(
         fc.property(fc.constantFrom(...SAMPLE_VERBS), verb => {
           const breadcrumb = generateBreadcrumbSchema(verb.dictionaryForm);
@@ -394,7 +397,7 @@ describe('Structured Data Completeness Properties', () => {
             unknown
           >[];
 
-          expect(items.length).toBe(4);
+          expect(items.length).toBe(3);
         }),
         { numRuns: 100 },
       );

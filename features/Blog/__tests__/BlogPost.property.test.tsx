@@ -1,7 +1,8 @@
 import React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import * as fc from 'fast-check';
-import { render, cleanup } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
+import { renderWithIntl as render } from '@/shared/test/renderWithIntl';
 import type {
   BlogPost as BlogPostType,
   BlogPostMeta,
@@ -232,12 +233,12 @@ describe('Property 19: Heading Hierarchy Maintained', () => {
     );
   });
 
-  it('renders title in h1 element with correct test id', () => {
+  it('renders the accessible article title', () => {
     fc.assert(
       fc.property(blogPostArb, (post: BlogPostType) => {
-        const { getByTestId, unmount } = render(<BlogPost post={post} />);
+        const { getByRole, unmount } = render(<BlogPost post={post} />);
 
-        const titleElement = getByTestId('blog-post-title');
+        const titleElement = getByRole('heading', { level: 1 });
         expect(titleElement.tagName.toLowerCase()).toBe('h1');
         expect(titleElement.textContent).toBe(post.title);
 
@@ -264,9 +265,9 @@ describe('Property 19: Heading Hierarchy Maintained', () => {
   it('uses semantic header element for post header', () => {
     fc.assert(
       fc.property(blogPostArb, (post: BlogPostType) => {
-        const { getByTestId, unmount } = render(<BlogPost post={post} />);
+        const { container, unmount } = render(<BlogPost post={post} />);
 
-        const headerElement = getByTestId('blog-post-header');
+        const headerElement = container.querySelector('article > div header')!;
         expect(headerElement.tagName.toLowerCase()).toBe('header');
 
         unmount();
@@ -275,13 +276,20 @@ describe('Property 19: Heading Hierarchy Maintained', () => {
     );
   });
 
-  it('uses semantic main element for content area', () => {
+  it('does not nest a main landmark inside the page main', () => {
     fc.assert(
       fc.property(blogPostArb, (post: BlogPostType) => {
-        const { getByTestId, unmount } = render(<BlogPost post={post} />);
+        const { getByRole, container, unmount } = render(
+          <BlogPost post={post} />,
+        );
 
-        const mainElement = getByTestId('blog-post-main');
-        expect(mainElement.tagName.toLowerCase()).toBe('main');
+        expect(container.querySelector('main')).toBeNull();
+        expect(
+          getByRole('region', {
+            name: post.title.replace(/\s+/g, ' ').trim(),
+            exact: true,
+          }),
+        ).toBeTruthy();
 
         unmount();
       }),
@@ -289,12 +297,15 @@ describe('Property 19: Heading Hierarchy Maintained', () => {
     );
   });
 
-  it('renders content section with correct test id', () => {
+  it('renders an article content region', () => {
     fc.assert(
       fc.property(blogPostArb, (post: BlogPostType) => {
-        const { getByTestId, unmount } = render(<BlogPost post={post} />);
+        const { getByRole, unmount } = render(<BlogPost post={post} />);
 
-        const contentSection = getByTestId('blog-post-content');
+        const contentSection = getByRole('region', {
+          name: post.title.replace(/\s+/g, ' ').trim(),
+          exact: true,
+        });
         expect(contentSection.tagName.toLowerCase()).toBe('section');
 
         unmount();
@@ -331,11 +342,13 @@ describe('Property 19: Heading Hierarchy Maintained', () => {
         blogPostArb,
         fc.array(blogPostMetaArb, { minLength: 1, maxLength: 3 }),
         (post: BlogPostType, relatedPosts: BlogPostMeta[]) => {
-          const { getByTestId, unmount } = render(
+          const { getByRole, unmount } = render(
             <BlogPost post={post} relatedPosts={relatedPosts} />,
           );
 
-          const relatedSection = getByTestId('blog-post-related-section');
+          const relatedSection = getByRole('complementary', {
+            name: 'Related posts',
+          });
           expect(relatedSection).not.toBeNull();
 
           unmount();
@@ -348,11 +361,13 @@ describe('Property 19: Heading Hierarchy Maintained', () => {
   it('does not render related posts section when no related posts provided', () => {
     fc.assert(
       fc.property(blogPostArb, (post: BlogPostType) => {
-        const { queryByTestId, unmount } = render(
+        const { queryByRole, unmount } = render(
           <BlogPost post={post} relatedPosts={[]} />,
         );
 
-        const relatedSection = queryByTestId('blog-post-related-section');
+        const relatedSection = queryByRole('complementary', {
+          name: 'Related posts',
+        });
         expect(relatedSection).toBeNull();
 
         unmount();
@@ -361,4 +376,3 @@ describe('Property 19: Heading Hierarchy Maintained', () => {
     );
   });
 });
-

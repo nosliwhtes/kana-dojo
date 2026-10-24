@@ -10,7 +10,7 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { buildJson } from '../lib/jsonBuilder';
-import type { ParsedAnkiData, DeckInfo, NoteType } from '../types';
+import type { ParsedAnkiData, DeckInfo, Deck } from '../types';
 
 /**
  * Create empty parsed data with various deck configurations
@@ -320,13 +320,28 @@ describe('Empty Deck Handling Property Tests', () => {
             const jsonString = JSON.stringify(result);
             const parsed = JSON.parse(jsonString);
 
-            expect(parsed.decks[0].name).toBe(deckName);
-            expect(parsed.decks[0].cards).toEqual([]);
+            // :: denotes hierarchy in Anki, so the complete path must survive,
+            // including Unicode and empty segments; it is not a flat root name.
+            const names: string[] = [];
+            let level: Deck[] | undefined = parsed.decks;
+            while (level) {
+              expect(level).toHaveLength(1);
+              names.push(level[0].name);
+              expect(level[0].cards).toEqual([]);
+              level = level[0].subdecks;
+            }
+            expect(names.join('::')).toBe(deckName);
+            expect(names).toHaveLength(deckName.split('::').length);
+            expect(parsed.metadata.totalCards).toBe(0);
 
             return true;
           },
         ),
-        { numRuns: 100 },
+        {
+          numRuns: 100,
+          // Keep the shrunk counterexample and actual Unicode deterministic.
+          examples: [[':: '], ['日本語'], ['日本語::かな'], ['親::::子']],
+        },
       );
     });
   });

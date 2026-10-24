@@ -9,14 +9,16 @@ vi.mock('@/core/i18n/routing', () => ({
 }));
 
 vi.mock('next-intl/server', () => ({
-  getTranslations: vi.fn(async () =>
-    ((key: string) => {
-      if (key.endsWith('.title')) return 'Sample Title';
-      if (key.endsWith('.titleShort')) return 'Sample Title Short';
-      if (key.endsWith('.description')) return 'Sample description for metadata';
-      if (key.endsWith('.keywords')) return 'kana, kanji, vocabulary';
-      return key;
-    }) as (key: string) => string,
+  getTranslations: vi.fn(
+    async () =>
+      ((key: string) => {
+        if (key.endsWith('.title')) return 'Sample Title';
+        if (key.endsWith('.titleShort')) return 'Sample Title Short';
+        if (key.endsWith('.description'))
+          return 'Sample description for metadata';
+        if (key.endsWith('.keywords')) return 'kana, kanji, vocabulary';
+        return key;
+      }) as (key: string) => string,
   ),
 }));
 
@@ -33,18 +35,14 @@ describe('generatePageMetadata canonical + hreflang', () => {
     expect(metadata.alternates?.canonical).toBe('https://kanadojo.com/kana');
   });
 
-  it('keeps locale alternates reciprocal and stable in no-prefix routing', async () => {
+  it('omits language alternates when locales share a public URL', async () => {
     const metadata = await generatePageMetadata('kanjiJlptN5', {
       locale: 'en',
       pathname: '/kanji/jlpt-n5',
       baseUrl: 'https://kanadojo.com',
     });
 
-    expect(metadata.alternates?.languages).toEqual({
-      en: 'https://kanadojo.com/kanji/jlpt-n5',
-      es: 'https://kanadojo.com/kanji/jlpt-n5',
-      'x-default': 'https://kanadojo.com/kanji/jlpt-n5',
-    });
+    expect(metadata.alternates?.languages).toBeUndefined();
   });
 
   it('normalizes unknown locale to canonical no-prefix URL', async () => {
@@ -54,7 +52,9 @@ describe('generatePageMetadata canonical + hreflang', () => {
       baseUrl: 'https://kanadojo.com',
     });
 
-    expect(metadata.alternates?.canonical).toBe('https://kanadojo.com/vocabulary');
+    expect(metadata.alternates?.canonical).toBe(
+      'https://kanadojo.com/vocabulary',
+    );
     expect(metadata.openGraph?.url).toBe('https://kanadojo.com/vocabulary');
   });
 });

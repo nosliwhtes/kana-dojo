@@ -11,7 +11,8 @@
 import React from 'react';
 import { describe, it, expect, afterEach } from 'vitest';
 import * as fc from 'fast-check';
-import { render, cleanup, screen } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
+import { renderWithIntl as render } from '@/shared/test/renderWithIntl';
 import { ResourceDetailModal } from '../components/ResourceDetailModal';
 import {
   CATEGORY_IDS,

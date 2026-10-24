@@ -129,8 +129,8 @@ describe('Property 5: Blog Card Contains Required Fields', () => {
   it('renders title from BlogPostMeta', () => {
     fc.assert(
       fc.property(blogPostMetaArb, (meta: BlogPostMeta) => {
-        const { getByTestId, unmount } = render(<BlogCard post={meta} />);
-        const titleElement = getByTestId('blog-card-title');
+        const { getByRole, unmount } = render(<BlogCard post={meta} />);
+        const titleElement = getByRole('heading', { level: 2 });
         expect(titleElement.textContent).toBe(meta.title);
         unmount();
       }),
@@ -141,8 +141,12 @@ describe('Property 5: Blog Card Contains Required Fields', () => {
   it('renders description from BlogPostMeta', () => {
     fc.assert(
       fc.property(blogPostMetaArb, (meta: BlogPostMeta) => {
-        const { getByTestId, unmount } = render(<BlogCard post={meta} />);
-        const descriptionElement = getByTestId('blog-card-description');
+        const { getByText, unmount } = render(<BlogCard post={meta} />);
+        const descriptionElement = getByText(
+          (_, element) =>
+            element?.tagName === 'P' &&
+            element.textContent === meta.description,
+        );
         expect(descriptionElement.textContent).toBe(meta.description);
         unmount();
       }),
@@ -153,8 +157,11 @@ describe('Property 5: Blog Card Contains Required Fields', () => {
   it('renders category badge from BlogPostMeta', () => {
     fc.assert(
       fc.property(blogPostMetaArb, (meta: BlogPostMeta) => {
-        const { getByTestId, unmount } = render(<BlogCard post={meta} />);
-        const categoryElement = getByTestId('blog-card-category');
+        const { getByText, unmount } = render(<BlogCard post={meta} />);
+        const categoryElement = getByText(meta.category, {
+          selector: 'span',
+          exact: true,
+        });
         expect(categoryElement.textContent).toBe(meta.category);
         unmount();
       }),
@@ -165,8 +172,10 @@ describe('Property 5: Blog Card Contains Required Fields', () => {
   it('renders reading time from BlogPostMeta', () => {
     fc.assert(
       fc.property(blogPostMetaArb, (meta: BlogPostMeta) => {
-        const { getByTestId, unmount } = render(<BlogCard post={meta} />);
-        const readingTimeElement = getByTestId('blog-card-reading-time');
+        const { getByText, unmount } = render(<BlogCard post={meta} />);
+        const readingTimeElement = getByText(`${meta.readingTime} min read`, {
+          exact: true,
+        });
         expect(readingTimeElement.textContent).toContain(
           String(meta.readingTime),
         );
@@ -180,8 +189,8 @@ describe('Property 5: Blog Card Contains Required Fields', () => {
   it('renders publication date from BlogPostMeta', () => {
     fc.assert(
       fc.property(blogPostMetaArb, (meta: BlogPostMeta) => {
-        const { getByTestId, unmount } = render(<BlogCard post={meta} />);
-        const dateElement = getByTestId('blog-card-date');
+        const { container, unmount } = render(<BlogCard post={meta} />);
+        const dateElement = container.querySelector('time')!;
         expect(dateElement.getAttribute('datetime')).toBe(meta.publishedAt);
         expect(dateElement.textContent?.length).toBeGreaterThan(0);
         unmount();
@@ -193,18 +202,26 @@ describe('Property 5: Blog Card Contains Required Fields', () => {
   it('contains all required fields in a single render', () => {
     fc.assert(
       fc.property(blogPostMetaArb, (meta: BlogPostMeta) => {
-        const { getByTestId, unmount } = render(<BlogCard post={meta} />);
-        expect(getByTestId('blog-card-title').textContent).toBe(meta.title);
-        expect(getByTestId('blog-card-description').textContent).toBe(
-          meta.description,
+        const { getByRole, getByText, container, unmount } = render(
+          <BlogCard post={meta} />,
         );
-        expect(getByTestId('blog-card-category').textContent).toBe(
-          meta.category,
-        );
-        expect(getByTestId('blog-card-reading-time').textContent).toContain(
-          String(meta.readingTime),
-        );
-        expect(getByTestId('blog-card-date').getAttribute('datetime')).toBe(
+        expect(getByRole('heading', { level: 2 }).textContent).toBe(meta.title);
+        expect(
+          getByText(
+            (_, element) =>
+              element?.tagName === 'P' &&
+              element.textContent === meta.description,
+          ).textContent,
+        ).toBe(meta.description);
+        expect(
+          getByText(meta.category, { selector: 'span', exact: true })
+            .textContent,
+        ).toBe(meta.category);
+        expect(
+          getByText(`${meta.readingTime} min read`, { exact: true })
+            .textContent,
+        ).toContain(String(meta.readingTime));
+        expect(container.querySelector('time')!.getAttribute('datetime')).toBe(
           meta.publishedAt,
         );
         unmount();
@@ -225,4 +242,3 @@ describe('Property 5: Blog Card Contains Required Fields', () => {
     );
   });
 });
-

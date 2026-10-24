@@ -1,4 +1,5 @@
 import type { Locale } from '../types/blog';
+import { routing } from '@/core/i18n/routing';
 
 /**
  * Hreflang tag structure
@@ -47,19 +48,21 @@ export function generateHreflang(
   availableLocales: Locale[],
   options: HreflangOptions = {},
 ): HreflangTag[] {
+  // Do not claim distinct translations when language is selected by cookie.
+  if (routing.localePrefix === 'never') return [];
   const baseUrl = options.baseUrl ?? BASE_URL;
 
-  // Locale prefixes are disabled; all locales resolve to the same public URL.
+  // This branch applies only when locale prefixes provide distinct URLs.
   const tags: HreflangTag[] = availableLocales.map(locale => ({
     hreflang: LOCALE_TO_HREFLANG[locale],
-    href: `${baseUrl}/academy/${slug}`,
+    href: `${baseUrl}/${locale}/academy/${slug}`,
   }));
 
-  // Add x-default pointing to the canonical public URL.
-  if (availableLocales.length > 0) {
+  // English is the default only when that translation exists.
+  if (availableLocales.includes('en')) {
     tags.push({
       hreflang: 'x-default',
-      href: `${baseUrl}/academy/${slug}`,
+      href: `${baseUrl}/en/academy/${slug}`,
     });
   }
 
