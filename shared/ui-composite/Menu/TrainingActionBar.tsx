@@ -317,7 +317,6 @@ const TrainingActionBar: React.FC<ITopBarProps> = ({
                     setGameModesMode('train');
                     setShowGameModesModal(true);
                   },
-                  ref: buttonRef,
                 },
               ]
                 .filter(btn => btn.show)
@@ -329,11 +328,10 @@ const TrainingActionBar: React.FC<ITopBarProps> = ({
                     iconClassName,
                     colorScheme,
                     onClick,
-                    ref,
                   }) => (
                     <button
                       key={id}
-                      ref={ref}
+                      ref={id === 'classic' ? buttonRef : undefined}
                       aria-label={label}
                       disabled={id === 'classic' && !isFilled}
                       className={cn(
