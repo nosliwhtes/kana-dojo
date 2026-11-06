@@ -565,6 +565,18 @@ describe('JSON Builder', () => {
       expect(variations[0].text).toContain('[capital]');
     });
 
+    it.each([
+      ["{{c1::?::'  '}}", '?', "[' ']"],
+      ['{{c1::東京  都::首  都}}', '東京 都', '[首 都]'],
+    ])(
+      'normalizes repeated spaces in cloze text: %s',
+      (input, answer, text) => {
+        expect(extractClozeVariations(input)).toEqual([
+          { index: 1, answer, text },
+        ]);
+      },
+    );
+
     it('should build nested deck hierarchy', () => {
       const data: ParsedAnkiData = {
         notes: [
@@ -954,7 +966,10 @@ describe('JSON Builder', () => {
           const text = `The answer is {{c1::${answer}}}`;
           const variations = extractClozeVariations(text);
 
-          return variations.length === 1 && variations[0].answer === answer;
+          return (
+            variations.length === 1 &&
+            variations[0].answer === answer.replace(/ {2,}/g, ' ')
+          );
         }),
         { numRuns: 100 },
       );
@@ -983,15 +998,16 @@ describe('JSON Builder', () => {
             const text = `{{c1::${answer}::${hint}}}`;
             const variations = extractClozeVariations(text);
 
-            // Should use hint as placeholder
+            // Printable-ASCII inputs follow the extractor's default whitespace
+            // normalization, including repeated spaces inside answers/hints.
             return (
               variations.length === 1 &&
-              variations[0].answer === answer &&
-              variations[0].text.includes(`[${hint}]`)
+              variations[0].answer === answer.replace(/ {2,}/g, ' ') &&
+              variations[0].text.includes(`[${hint.replace(/ {2,}/g, ' ')}]`)
             );
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 100, examples: [[['?', "'  '"]], [['a  b', 'hint']]] },
       );
     });
 

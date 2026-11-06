@@ -12,19 +12,20 @@
 export function parseOklch(
   oklchColor: string,
 ): { L: number; C: number; H: number; A: number } | null {
-  const match = oklchColor.match(
-    /oklch\(\s*([\d.]+)%?\s+([\d.]+)\s+([\d.]+)\s*(?:\/\s*([\d.]+))?\s*\)/,
-  );
+  const match = oklchColor
+    .trim()
+    .match(
+      /^oklch\(\s*(\d*\.?\d+)(%)?\s+(\d*\.?\d+)\s+([+-]?\d*\.?\d+)\s*(?:\/\s*(\d*\.?\d+))?\s*\)$/i,
+    );
   if (!match) return null;
 
-  let L = parseFloat(match[1]);
-  if (L > 1) L = L / 100; // Normalize percentage to 0-1
+  const L = Number(match[1]) / (match[2] ? 100 : 1);
 
   return {
-    L,
-    C: parseFloat(match[2]),
-    H: parseFloat(match[3]),
-    A: match[4] ? parseFloat(match[4]) : 1,
+    L: Math.min(1, Math.max(0, L)),
+    C: Number(match[3]),
+    H: Number(match[4]),
+    A: match[5] ? Math.min(1, Number(match[5])) : 1,
   };
 }
 

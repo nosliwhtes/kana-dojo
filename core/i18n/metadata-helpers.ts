@@ -43,19 +43,16 @@ function getLanguageAlternates(baseUrl: string, pathname: string) {
   const path = normalizedPathname === '/' ? '' : normalizedPathname;
 
   if (routing.localePrefix === 'never') {
-    const canonicalPath = `${normalizedBaseUrl}${path}`;
-    const languages = Object.fromEntries(
-      routing.locales.map(locale => [locale, canonicalPath]),
-    );
-
-    return {
-      ...languages,
-      'x-default': canonicalPath,
-    };
+    // A cookie-selected language is not a separately addressable translation.
+    // Match next-intl's policy for localePrefix: 'never'.
+    return undefined;
   }
 
   const languages = Object.fromEntries(
-    routing.locales.map(locale => [locale, `${normalizedBaseUrl}/${locale}${path}`]),
+    routing.locales.map(locale => [
+      locale,
+      `${normalizedBaseUrl}/${locale}${path}`,
+    ]),
   );
 
   return {

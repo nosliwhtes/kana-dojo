@@ -1,6 +1,7 @@
 'use client';
 
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/shared/utils/utils';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {
@@ -142,6 +143,8 @@ export const ResourceDetailModal = memo(function ResourceDetailModal({
   relatedResources = [],
   onRelatedSelect,
 }: ResourceDetailModalProps) {
+  const t = useTranslations('common');
+  const openerRef = useRef<HTMLElement | null>(null);
   const handleClose = useCallback(() => {
     onClose();
   }, [onClose]);
@@ -152,11 +155,23 @@ export const ResourceDetailModal = memo(function ResourceDetailModal({
 
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={onClose}>
-      <DialogPrimitive.Portal forceMount>
+      <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className='fixed inset-0 z-50 bg-black/80' />
         <DialogPrimitive.Content
           className='fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-[95vw] max-w-4xl -translate-x-1/2 -translate-y-1/2 flex-col gap-0 rounded-2xl border-0 border-(--border-color) bg-(--background-color) p-0 selection:bg-(--main-color) selection:text-(--background-color) sm:max-h-[80vh] sm:w-[90vw]'
-          onOpenAutoFocus={e => e.preventDefault()}
+          onOpenAutoFocus={() => {
+            openerRef.current =
+              document.activeElement instanceof HTMLElement
+                ? document.activeElement
+                : null;
+          }}
+          onCloseAutoFocus={event => {
+            // Cards open this controlled dialog without a Radix Trigger.
+            if (openerRef.current?.isConnected) {
+              event.preventDefault();
+              openerRef.current.focus();
+            }
+          }}
         >
           {/* Sticky Header */}
           <div className='sticky top-0 z-10 flex flex-row items-center justify-between rounded-t-2xl border-b border-(--border-color) bg-(--background-color) px-6 pt-6 pb-4 sm:px-12'>
@@ -171,7 +186,8 @@ export const ResourceDetailModal = memo(function ResourceDetailModal({
             </div>
             <button
               onClick={handleClose}
-              className='shrink-0 cursor-pointer rounded-xl p-2 hover:bg-(--card-color)'
+              aria-label={t('buttons.close')}
+              className='min-h-11 min-w-11 shrink-0 cursor-pointer rounded-xl p-2 hover:bg-(--card-color) focus-visible:outline-2 focus-visible:outline-offset-2'
             >
               <X size={24} className='text-(--secondary-color)' />
             </button>
@@ -184,6 +200,9 @@ export const ResourceDetailModal = memo(function ResourceDetailModal({
             <DialogPrimitive.Title className='mb-12 flex flex-col text-4xl leading-tight font-black tracking-tighter text-(--main-color) md:text-6xl'>
               <span>{resource.name}</span>
             </DialogPrimitive.Title>
+            <DialogPrimitive.Description className='sr-only'>
+              {resource.description}
+            </DialogPrimitive.Description>
 
             <div className='grid grid-cols-1 gap-16 lg:grid-cols-12'>
               <div className='space-y-12 lg:col-span-8'>
@@ -252,7 +271,7 @@ export const ResourceDetailModal = memo(function ResourceDetailModal({
                       Deployments
                     </h3>
                     <div className='flex flex-wrap gap-2'>
-                      {resource.platforms.map(platform => (
+                      {[...new Set(resource.platforms)].map(platform => (
                         <PlatformBadge key={platform} platform={platform} />
                       ))}
                     </div>
@@ -302,4 +321,3 @@ export const ResourceDetailModal = memo(function ResourceDetailModal({
 });
 
 export default ResourceDetailModal;
-

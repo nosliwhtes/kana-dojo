@@ -31,7 +31,9 @@
     "streak": "Racha: {{count}}",
     "correct": "¡Correcto!",
     "incorrect": "Incorrecto",
-    "tryAgain": "Intentar de Nuevo"
+    "tryAgain": "Intentar de Nuevo",
+    "answerLabel": "Tu respuesta",
+    "answerPlaceholder": "Escribe tu respuesta…"
   },
   "modes": {
     "pick": "Modo Elegir",

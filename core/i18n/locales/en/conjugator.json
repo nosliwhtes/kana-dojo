@@ -257,7 +257,7 @@
     },
     "verbTypesIchidan": {
       "title": "Ichidan Verbs (一段動詞)",
-      "description": "Also called ru-verbs or Group II verbs. These verbs end in -iru or -eru and conjugate by dropping る and adding suffixes. Examples include 食べる (taberu) and 見る (miru)."
+      "description": "Also called ru-verbs or Group II verbs. These verbs end in -iru or -eru and conjugate by dropping る and adding suffixes. Examples include 食べる (taberu) and 見る (miru). Not every verb ending in -iru or -eru is Ichidan: 帰る (kaeru) is Godan. Check the verb group before choosing a pattern."
     },
     "verbTypesIrregular": {
       "title": "Irregular Verbs (不規則動詞)",

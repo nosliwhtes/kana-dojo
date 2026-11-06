@@ -1,3 +1,5 @@
+import { normalizeKanaAnswer } from './normalizeKanaAnswer';
+
 interface EvaluateKanaAdaptivePositionsOptions {
   promptChars: string[];
   answerParts: string[];
@@ -13,18 +15,19 @@ export const evaluateKanaAdaptivePositions = ({
   isReverse,
   altRomanjiMap,
 }: EvaluateKanaAdaptivePositionsOptions): boolean[] => {
-  const normalizedInput = inputValue.trim();
+  const normalizedInput = normalizeKanaAnswer(inputValue);
   const results = promptChars.map(() => false);
 
   if (!normalizedInput) return results;
 
   if (isReverse) {
-    const expectedChars = answerParts.join('');
-    const actualChars = normalizedInput;
+    let cursor = 0;
     for (let i = 0; i < promptChars.length; i++) {
-      const expected = expectedChars[i] ?? '';
-      const actual = actualChars[i] ?? '';
-      results[i] = expected.length > 0 && expected === actual;
+      const expected = normalizeKanaAnswer(answerParts[i] ?? '');
+      results[i] =
+        expected.length > 0 &&
+        normalizedInput.slice(cursor, cursor + expected.length) === expected;
+      cursor += expected.length;
     }
     return results;
   }
@@ -34,9 +37,9 @@ export const evaluateKanaAdaptivePositions = ({
 
   for (let i = 0; i < promptChars.length; i++) {
     const promptChar = promptChars[i];
-    const primary = (answerParts[i] ?? '').toLowerCase();
+    const primary = normalizeKanaAnswer(answerParts[i] ?? '');
     const alternatives = (altRomanjiMap.get(promptChar) ?? []).map(alt =>
-      alt.toLowerCase(),
+      normalizeKanaAnswer(alt),
     );
     const options = Array.from(new Set([primary, ...alternatives]))
       .filter(Boolean)

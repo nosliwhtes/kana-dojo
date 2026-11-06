@@ -2,6 +2,7 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { CircleCheck, RotateCcw, Flag } from 'lucide-react';
 import clsx from 'clsx';
+import { useTranslations } from 'next-intl';
 import { ActionButton } from '@/shared/ui/components/ActionButton';
 import { useClick } from '@/shared/hooks/generic/useAudio';
 
@@ -42,12 +43,15 @@ export const GameBottomBar = ({
   clearWrongFeedbackSignal,
   wrongFeedbackSignal,
 }: GameBottomBarProps) => {
+  const t = useTranslations('common');
   const { playClick } = useClick();
 
   const isCorrect = state === 'correct';
   const isWrong = state === 'wrong';
   const [hideWrongFeedback, setHideWrongFeedback] = useState(false);
-  const lastClearSignalRef = useRef<number | undefined>(clearWrongFeedbackSignal);
+  const lastClearSignalRef = useRef<number | undefined>(
+    clearWrongFeedbackSignal,
+  );
   const showFeedback = state !== 'check' && !(isWrong && hideWrongFeedback);
   const showContinue = isCorrect;
   // When hideRetry is true, treat wrong state like check state for button display
@@ -120,7 +124,7 @@ export const GameBottomBar = ({
       >
         <div
           className={clsx(
-            'flex items-center gap-3 transition-all duration-500 md:gap-4',
+            'flex min-w-0 items-center gap-3 transition-all duration-500 motion-reduce:transition-none md:gap-4',
             showFeedback
               ? 'translate-x-0 opacity-100'
               : 'pointer-events-none -translate-x-4 opacity-0 sm:-translate-x-8',
@@ -163,7 +167,13 @@ export const GameBottomBar = ({
               </svg>
             </div>
           )}
-          <p className='flex flex-col'>
+          <p
+            className='flex min-w-0 flex-col wrap-anywhere'
+            aria-hidden={!showFeedback}
+            role='status'
+            aria-live='polite'
+            aria-atomic='true'
+          >
             <span className='text-lg text-(--secondary-color) sm:text-xl'>
               {frozenTitle}
             </span>
@@ -176,7 +186,9 @@ export const GameBottomBar = ({
               playClick();
               window.open('https://tally.so/r/2E4rB9', '_blank', 'noopener');
             }}
-            className='max-sm:hidden'
+            aria-label={t('game.reportAnswer')}
+            tabIndex={showFeedback ? 0 : -1}
+            className='flex min-h-11 min-w-11 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 max-sm:hidden'
           >
             <Flag className='h-6 w-6 text-(--secondary-color) delay-0 hover:cursor-pointer hover:text-(--main-color)' />
           </button>
@@ -186,7 +198,9 @@ export const GameBottomBar = ({
             playClick();
             window.open('https://tally.so/r/2E4rB9', '_blank', 'noopener');
           }}
-          className='sm:hidden'
+          aria-label={t('game.reportAnswer')}
+          tabIndex={showFeedback ? 0 : -1}
+          className='flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 sm:hidden'
         >
           <Flag className='h-6 w-6 text-(--secondary-color) delay-0 hover:cursor-pointer hover:text-(--main-color)' />
         </button>
@@ -206,14 +220,21 @@ export const GameBottomBar = ({
             borderBottomThickness={12}
             borderRadius='3xl'
             className={clsx(
-              'w-full px-6 py-2.5 text-lg font-medium transition-all duration-150 sm:w-auto sm:px-12 sm:py-3 sm:text-xl',
+              'w-full px-6 py-2.5 text-lg font-medium transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 disabled:cursor-default motion-reduce:transition-none sm:w-auto sm:px-12 sm:py-3 sm:text-xl',
               !canCheck &&
                 !showContinue &&
                 !showRetryButton &&
                 'cursor-default opacity-60',
               (canCheck || showNextButton) &&
-                'animate-float [--float-distance:-2px]',
+                'animate-float [--float-distance:-2px] motion-reduce:animate-none',
             )}
+            disabled={
+              !canCheck &&
+              !showContinue &&
+              !showRetryButton &&
+              actionLabel !== 'skip' &&
+              actionLabel !== 'next'
+            }
             onClick={onAction}
           >
             {showRetryButton ? (

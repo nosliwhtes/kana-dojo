@@ -98,7 +98,7 @@ export default async function ConjugatePage({
           },
         ]}
       />
-      <main className='min-h-screen'>
+      <div className='min-h-screen'>
         {/* Skip link for accessibility */}
         <a
           href='#conjugator'
@@ -142,7 +142,7 @@ export default async function ConjugatePage({
             <RelatedFeatures />
           </section>
         </article>
-      </main>
+      </div>
     </>
   );
 }

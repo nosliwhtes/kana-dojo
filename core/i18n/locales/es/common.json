@@ -63,5 +63,8 @@
     "copy": "Copiar",
     "paste": "Pegar",
     "backToTop": "Volver arriba"
+  },
+  "game": {
+    "reportAnswer": "Informar de un problema con esta respuesta"
   }
 }

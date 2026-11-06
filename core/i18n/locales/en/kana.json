@@ -31,7 +31,9 @@
     "streak": "Streak: {{count}}",
     "correct": "Correct!",
     "incorrect": "Incorrect",
-    "tryAgain": "Try Again"
+    "tryAgain": "Try Again",
+    "answerLabel": "Your answer",
+    "answerPlaceholder": "Type your answer…"
   },
   "modes": {
     "pick": "Pick Mode",

@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import type { PluginOption } from 'vite';
+import type { BrowserProviderOption } from 'vitest/node';
 const dirname =
   typeof __dirname !== 'undefined'
     ? __dirname
@@ -12,8 +13,9 @@ const require = createRequire(import.meta.url);
 
 let storybookTest: ((options: { configDir: string }) => PluginOption) | null =
   null;
-let playwright: ((options: Record<string, unknown>) => PluginOption) | null =
-  null;
+let playwright:
+  | ((options: Record<string, unknown>) => BrowserProviderOption)
+  | null = null;
 
 try {
   // Loaded dynamically so TypeScript doesn't require these deps for `npm run check`.
@@ -26,7 +28,7 @@ try {
 try {
   playwright = require('@vitest/browser-playwright').playwright as (
     options: Record<string, unknown>,
-  ) => PluginOption;
+  ) => BrowserProviderOption;
 } catch {
   playwright = null;
 }
@@ -35,6 +37,11 @@ try {
 export default defineConfig({
   test: {
     environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
+    // next-intl imports Next's extensionless entrypoints for bundler support.
+    // Process them through Vite rather than Node's native ESM resolver.
+    // https://next-intl.dev/docs/environments/testing
+    server: { deps: { inline: ['next-intl'] } },
     globals: true,
     include: ['**/*.test.ts', '**/*.test.tsx'],
     ...(storybookTest && playwright
@@ -54,7 +61,7 @@ export default defineConfig({
                 browser: {
                   enabled: true,
                   headless: true,
-                  provider: playwright({}) as unknown as 'playwright',
+                  provider: playwright({}),
                   instances: [
                     {
                       browser: 'chromium',

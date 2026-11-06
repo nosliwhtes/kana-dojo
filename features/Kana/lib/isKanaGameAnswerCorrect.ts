@@ -1,3 +1,4 @@
+import { isKanaInputAnswerCorrect } from './isKanaInputAnswerCorrect';
 import type { KanaCharacter } from './flattenKanaGroup';
 
 /**
@@ -16,12 +17,11 @@ export const isKanaGameAnswerCorrect = (
   answer: string,
   isReverse: boolean | undefined,
 ): boolean => {
-  if (isReverse) {
-    return answer.replace(/\s+/g, '') === question.kana;
-  }
-  const normalized = answer.replace(/\s+/g, '').toLowerCase();
-  return (
-    normalized === question.romaji.toLowerCase() ||
-    question.altRomanji.some(alt => normalized === alt.toLowerCase())
-  );
+  return isKanaInputAnswerCorrect({
+    inputValue: answer,
+    correctChar: isReverse ? question.romaji : question.kana,
+    targetChar: isReverse ? question.kana : question.romaji,
+    isReverse: Boolean(isReverse),
+    altRomanjiMap: new Map([[question.kana, question.altRomanji]]),
+  });
 };

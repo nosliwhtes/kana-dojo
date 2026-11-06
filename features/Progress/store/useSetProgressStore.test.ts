@@ -61,7 +61,7 @@ describe('useSetProgressStore', () => {
     expect(useSetProgressStore.getState().data.vocabulary).toEqual({});
   });
 
-  it('caps kanji progress at 15 correct answers', async () => {
+  it('caps kanji progress at 30 correct answers', async () => {
     await useSetProgressStore.getState().hydrate();
 
     for (let i = 0; i < 250; i++) {
@@ -69,7 +69,7 @@ describe('useSetProgressStore', () => {
     }
 
     expect(useSetProgressStore.getState().data.kanji['日']).toEqual({
-      correct: 15,
+      correct: 30,
     });
   });
 

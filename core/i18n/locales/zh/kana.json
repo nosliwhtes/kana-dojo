@@ -31,7 +31,9 @@
     "streak": "连击：{{count}}",
     "correct": "正确！",
     "incorrect": "错误",
-    "tryAgain": "再试一次"
+    "tryAgain": "再试一次",
+    "answerLabel": "你的答案",
+    "answerPlaceholder": "输入你的答案…"
   },
   "modes": {
     "pick": "选择模式",

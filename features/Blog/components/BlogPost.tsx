@@ -101,7 +101,10 @@ export function BlogPost({
               </span>
             </div>
 
-            <h1 className='premium-serif mb-10 text-5xl leading-[1.05] font-black tracking-tight text-(--main-color) md:text-7xl lg:text-8xl'>
+            <h1
+              id={`article-title-${post.slug}`}
+              className='premium-serif mb-10 text-5xl leading-[1.05] font-black tracking-tight text-(--main-color) md:text-7xl lg:text-8xl'
+            >
               {post.title}
             </h1>
 
@@ -158,17 +161,20 @@ export function BlogPost({
           </div>
 
           {/* Article Body Content */}
-          <main className='editorial-content mx-auto max-w-3xl lg:mx-0'>
-            <div className='editorial-drop-cap prose-lg prose-serif leading-[1.8] text-(--secondary-color)'>
+          <div className='editorial-content mx-auto max-w-3xl lg:mx-0'>
+            <section
+              aria-labelledby={`article-title-${post.slug}`}
+              className='editorial-drop-cap prose-lg prose-serif leading-[1.8] text-(--secondary-color)'
+            >
               {children}
-            </div>
+            </section>
 
             {/* Tag Dossier */}
             {post.tags.length > 0 && (
               <footer className='mt-24 border-t border-(--border-color) pt-12'>
-                <h4 className='mb-6 text-[10px] font-black tracking-[0.4em] text-(--main-color) uppercase opacity-30'>
+                <h2 className='mb-6 text-[10px] font-black tracking-[0.4em] text-(--main-color) uppercase opacity-30'>
                   Dossier Keywords
-                </h4>
+                </h2>
                 <div className='flex flex-wrap gap-3'>
                   {post.tags.map(tag => (
                     <span
@@ -185,9 +191,9 @@ export function BlogPost({
             {/* Related Studies Section */}
             {relatedPosts.length > 0 && (
               <section className='mt-32 border-t-[3px] border-(--main-color) pt-16'>
-                <h3 className='premium-serif mb-12 text-4xl font-black italic'>
+                <p className='premium-serif mb-12 text-4xl font-black italic'>
                   Complementary Studies
-                </h3>
+                </p>
                 <RelatedPosts posts={relatedPosts} />
               </section>
             )}
@@ -212,7 +218,7 @@ export function BlogPost({
                 </div>
               </Link>
             </div>
-          </main>
+          </div>
         </div>
 
         {/* Floating Sidebar (Desktop Only) */}
@@ -221,9 +227,9 @@ export function BlogPost({
             {/* Minimal TOC */}
             {post.headings.length > 0 && (
               <div className='border-l border-(--border-color) pl-8'>
-                <h5 className='mb-8 text-[10px] font-black tracking-[0.3em] text-(--main-color) uppercase opacity-30'>
+                <p className='mb-8 text-[10px] font-black tracking-[0.3em] text-(--main-color) uppercase opacity-30'>
                   Journal Index
-                </h5>
+                </p>
                 <TableOfContents headings={post.headings} />
               </div>
             )}
@@ -247,4 +253,3 @@ export function BlogPost({
 export { mdxComponents };
 
 export default BlogPost;
-

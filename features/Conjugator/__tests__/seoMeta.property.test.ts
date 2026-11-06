@@ -209,14 +209,13 @@ describe('SEO Meta Tag Generation Properties', () => {
       );
     });
 
-    it('OG image URL is valid for all verbs', () => {
+    it('does not reference the retired OG image endpoint', () => {
       fc.assert(
         fc.property(fc.constantFrom(...ALL_VERB_INFOS), verb => {
           const meta = generateVerbMeta(verb);
 
-          // OG image should be a valid URL
-          expect(meta.ogImage).toMatch(/^https:\/\//);
-          expect(meta.ogImage).toContain('/api/og');
+          expect(meta).not.toHaveProperty('ogImage');
+          expect(JSON.stringify(meta)).not.toContain('/api/og');
         }),
         { numRuns: 100 },
       );
@@ -290,7 +289,9 @@ describe('SEO Meta Tag Generation Properties', () => {
           fc.constantFrom(...ALL_VERB_INFOS),
           (locale, verb) => {
             const url = generateCanonicalUrl(verb.dictionaryForm, { locale });
-            expect(url).toContain(`/${locale}/`);
+            expect(url).toBe(
+              `https://kanadojo.com/conjugate?verb=${encodeURIComponent(verb.dictionaryForm)}`,
+            );
             expect(url).toContain('verb=');
           },
         ),

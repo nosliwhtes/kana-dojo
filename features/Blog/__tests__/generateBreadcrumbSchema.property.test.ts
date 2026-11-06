@@ -133,7 +133,7 @@ describe('Property 11: Breadcrumb Schema Correctly Structured', () => {
         const schema = generateBreadcrumbSchema(post, { baseUrl: BASE_URL });
         const homeItem = schema.itemListElement[0];
         expect(homeItem.name).toBe('Home');
-        expect(homeItem.item).toBe(`${BASE_URL}/${post.locale}`);
+        expect(homeItem.item).toBe(`${BASE_URL}`);
       }),
       { numRuns: 100 },
     );
@@ -145,7 +145,7 @@ describe('Property 11: Breadcrumb Schema Correctly Structured', () => {
         const schema = generateBreadcrumbSchema(post, { baseUrl: BASE_URL });
         const academyItem = schema.itemListElement[1];
         expect(academyItem.name).toBe('Academy');
-        expect(academyItem.item).toBe(`${BASE_URL}/${post.locale}/academy`);
+        expect(academyItem.item).toBe(`${BASE_URL}/academy`);
       }),
       { numRuns: 100 },
     );
@@ -157,9 +157,7 @@ describe('Property 11: Breadcrumb Schema Correctly Structured', () => {
         const schema = generateBreadcrumbSchema(post, { baseUrl: BASE_URL });
         const postItem = schema.itemListElement[2];
         expect(postItem.name).toBe(post.title);
-        expect(postItem.item).toBe(
-          `${BASE_URL}/${post.locale}/academy/${post.slug}`,
-        );
+        expect(postItem.item).toBe(`${BASE_URL}/academy/${post.slug}`);
       }),
       { numRuns: 100 },
     );
