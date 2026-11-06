@@ -154,7 +154,7 @@ jobs:
         if: steps.pr_state.outputs.should_run == 'true' && steps.community_only.outputs.is_community_only != 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '26'
           cache: 'npm'
 
       - name: Install dependencies
@@ -164,6 +164,10 @@ jobs:
       - name: Run full check
         if: steps.pr_state.outputs.should_run == 'true' && steps.community_only.outputs.is_community_only != 'true'
         run: npm run check
+
+      - name: Run regression suite
+        if: steps.pr_state.outputs.should_run == 'true' && steps.community_only.outputs.is_community_only != 'true'
+        run: npm test
 
       - name: Community-only PR passes
         if: steps.pr_state.outputs.should_run == 'true' && steps.community_only.outputs.is_community_only == 'true'
